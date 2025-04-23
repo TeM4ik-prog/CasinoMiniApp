@@ -1,0 +1,20 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+  schema   = "../../keystone/schema.prisma"
+}
+
+datasource sqlite {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id         String  @id @default(uuid())
+  telegramId Int     @unique
+  username   String
+  lastName   String?
+  firstName  String?
+  photoUrl   String?
+  balance    Float?  @default(0)
+}

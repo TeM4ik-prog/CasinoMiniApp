@@ -9,6 +9,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        casino: {
+          primary: '#0F0F0F',    // Основной темный цвет фона
+          secondary: '#1A1A1A',  // Более светлый темный цвет
+          gold: {
+            DEFAULT: '#D4AF37',  // Основной золотой
+            light: '#FFD700',    // Светлый золотой
+            dark: '#B8860B',     // Темный золотой
+          },
+          border: {
+            DEFAULT: '#D4AF37',
+            20: '#D4AF3733',     // 20% прозрачности
+            10: '#D4AF371A',     // 10% прозрачности
+          }
+        },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         'light-green': 'hsl(var(--light-green))',

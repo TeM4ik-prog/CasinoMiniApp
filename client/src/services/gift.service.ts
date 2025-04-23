@@ -1,5 +1,4 @@
 import { ApiRoute } from "@/types";
-import { IUserFilters } from "@/types/gift";
 import { apiConfig } from "@/types/pagesConfig";
 
 export class giftService implements ApiRoute {

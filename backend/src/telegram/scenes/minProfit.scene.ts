@@ -31,7 +31,6 @@ export class MinProfitScene {
         if (text.toLowerCase() === 'подтвердить') {
             const value = ctx.scene.session['minProfitValue'];
 
-            this.userService.updateUserMinProfit(ctx.from.id, value)
 
             await ctx.reply(`Минимальный профит ${value} сохранён.`);
             return ctx.scene.leave();

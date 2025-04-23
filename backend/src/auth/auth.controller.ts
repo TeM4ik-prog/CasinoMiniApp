@@ -34,7 +34,7 @@ export class AuthController {
 
 	@Post('/login')
 	async login(
-		@Body() telegramData: User,
+		@Body() telegramData: ITelegramAuthDto,
 	) {
 		console.log(telegramData);
 		const user = await this.usersService.findOrCreateUser(telegramData);

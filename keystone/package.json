@@ -1,0 +1,18 @@
+{
+  "name": "keystone",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npx keystone"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@keystar/ui": "^0.7.17",
+    "@keystone-6/auth": "^8.1.0",
+    "@keystone-6/core": "^6.3.1",
+    "basic-auth": "^2.0.1"
+  }
+}

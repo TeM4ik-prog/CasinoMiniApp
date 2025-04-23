@@ -3,7 +3,6 @@ import { TelegrafModule } from 'nestjs-telegraf';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TelegramUpdate } from './telegram.update';
 import { TelegramService } from './telegram.service';
-import { GiftsModule } from '@/gifts/gifts.module';
 import { UsersModule } from '@/users/users.module';
 import { session } from 'telegraf';
 import { MinProfitScene } from './scenes/minProfit.scene';
@@ -29,7 +28,6 @@ import { DatabaseModule } from '@/database/database.module';
       }),
       inject: [ConfigService],
     }),
-    forwardRef(() => GiftsModule)
 
   ],
   providers: [

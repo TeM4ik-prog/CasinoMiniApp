@@ -9,21 +9,9 @@ export interface EntryAdminDto extends EntryDto {
 export interface ITelegramAuthDto {
   id: number;
   first_name: string;
+  last_name?: string
   username: string;
   photo_url: string;
   auth_date: number;
-  hash: string;
 }
 
-export interface IGoogleJwtDto {
-  clientId: string;
-  credential: string;
-  select_by: string;
-}
-
-export interface IGoogleAuthDto {
-  email: string;
-  name: string;
-  given_name: string;
-  picture: string;
-}

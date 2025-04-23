@@ -1,285 +1,209 @@
-import { Block } from "@/components/layout/Block";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { GiftService } from "@/services/gift.service";
+import { Button } from "@/components/ui/Button";
 import { useUserData } from "@/store/hooks";
-import { onRequest } from "@/types";
-import { IGift, IGiftDataUpdate, IPackGiftsDataUpdate, IUserFilters } from "@/types/gift";
-import { filterProps } from "framer-motion";
-import { BanIcon, CheckCircle, KeyIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 
-interface GroupedUpdates {
-    [name: string]: {
-        items: IGiftDataUpdate[];
-        itemFilters: IUserFilters
-        isExpanded: boolean;
-    };
+interface GameCardProps {
+    title: string;
+    image: string;
+    onClick: () => void;
 }
 
-const MainPage: React.FC = () => {
-    const [lastUpdate, setLastUpdate] = useState<IGiftDataUpdate | null>(null)
-    const [groupedUpdates, setGroupedUpdates] = useState<GroupedUpdates>({});
-    const { user } = useUserData()
+const GameCard: React.FC<GameCardProps> = ({ title, image, onClick }) => {
+    return (
+        <div className="flex flex-col space-y-2">
+            <div 
+                onClick={onClick}
+                className="relative cursor-pointer group overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300 w-full"
+            >
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 animate-pulse" />
+                <img 
+                    src={image} 
+                    alt={title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                    }}
+                />
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </div>
+            <span className="text-xs text-gray-600 dark:text-gray-400 truncate px-1">{title}</span>
+        </div>
+    );
+};
 
-    const updateData = async () => {
-        const data: { lastUpdate: any, filters: IUserFilters[] } = await onRequest(GiftService.getLastUpdate())
-        console.log(data)
+const CategoryTitle: React.FC<{ title: string }> = ({ title }) => (
+    <div className="w-full border-b border-gray-200 dark:border-gray-700 mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white pb-2">{title}</h2>
+    </div>
+);
 
+const Navigation: React.FC = () => {
+    const categories = [
+        { id: 'popular', title: 'Популярные', path: '#popular' },
+        { id: 'slots', title: 'Слоты', path: '#slots' },
+        { id: 'jackpot', title: 'Джек Пот', path: '#jackpot' }
+    ];
 
-        if (data) {
-            setLastUpdate(data.lastUpdate);
-            groupUpdates(data.lastUpdate, data.filters);
-        }
-    };
-
-    const groupUpdates = (updates: IGiftDataUpdate[], userFilters: IUserFilters[]) => {
-        const grouped: GroupedUpdates = {};
-
-        updates.forEach((update: IGiftDataUpdate) => {
-            const name = update.Gifts[0]?.name || 'Unknown';
-
-
-            const filterItem = (userFilters.find((filter) => (name === filter.nft)))!
-
-            console.log(filterItem)
-
-            if (!grouped[name]) {
-                grouped[name] = {
-                    items: [],
-                    itemFilters: filterItem!,
-                    isExpanded: false
-                };
-            }
-
-            grouped[name].items.push(update);
-        });
-
-        console.log(grouped)
-
-        setGroupedUpdates(grouped);
-    };
-
-    const toggleGroup = (name: string) => {
-        setGroupedUpdates(prev => ({
-            ...prev,
-            [name]: {
-                ...prev[name],
-                isExpanded: !prev[name].isExpanded
-            }
-        }));
-    };
+    const [activeCategory, setActiveCategory] = useState('popular');
+    const location = useLocation();
 
     useEffect(() => {
-        updateData();
+        const handleScroll = () => {
+            const sections = categories.map(cat => {
+                const element = document.getElementById(cat.id);
+                if (!element) return { id: cat.id, offset: 0 };
+                return {
+                    id: cat.id,
+                    offset: Math.abs(element.getBoundingClientRect().top - 64)
+                };
+            });
+
+            const closest = sections.reduce((prev, curr) => 
+                prev.offset < curr.offset ? prev : curr
+            );
+
+            setActiveCategory(closest.id);
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const getProfitColor = (profit: number) => {
-        if (profit > 0) return 'text-green-500';
-        if (profit < 0) return 'text-red-500';
-        return 'text-gray-500';
-    };
-
-
-    const displayGiftInfo = (itemFilters: IUserFilters, gift: IGift,) => {
-        console.log(gift)
-
-        const modelsExists = itemFilters.models.find(model => model == gift.model)
-        const backgroundExists = itemFilters.backgrounds.find(back => back == gift.backdrop)
-        const symbolExists = itemFilters.symbols.find(symb => symb == gift.symbol)
-
-        console.log(modelsExists, backgroundExists)
-
-
-        const displayExistingParam = (param: keyof IGift, existingParamName: string | undefined) => {
-
-            return (
-                <p className={`${existingParamName ? 'bg-yellow-400 rounded text-xs text-black' : ''} p-1`}>{String(gift[param])}</p>
-            )
+    const handleCategoryClick = (categoryId: string, path: string) => {
+        const element = document.getElementById(categoryId);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+            setActiveCategory(categoryId);
         }
-
-        return (
-            <span className="flex gap-1 flex-row text-xs text-gray-500 dark:text-gray-400">
-                {displayExistingParam("model", modelsExists)}
-                {displayExistingParam("backdrop", backgroundExists)}
-                {displayExistingParam("symbol", symbolExists)}
-            </span>
-        )
-
-    }
-
-    const formatPrice = (price: number) => {
-        return price.toFixed(2);
     };
 
     return (
-        <PageContainer className="!px-0">
-            <div className="w-full max-w-6xl mx-auto p-1">
-
-                {user?.hasRights ? (
-                    <div className="m-2 p-4 bg-green-900/20 border-l-4 border-green-500 rounded-lg backdrop-blur-sm">
-                        <div className="flex items-center">
-                            <CheckCircle className="h-5 w-5 text-green-400 mr-2" />
-                            <p className="text-green-100 font-medium">
-                                У вас есть права администратора
-                            </p>
-                        </div>
-                        <p className="mt-2 text-sm text-green-300/90">
-                            Полный доступ к управлению системными фильтрами
-                        </p>
-                    </div>
-                ) : (
-                    <div className="m-2 p-4 bg-red-900/20 border-l-4 border-red-500 rounded-lg backdrop-blur-sm">
-                        <div className="flex items-center">
-                            <BanIcon className="h-5 w-5 text-red-400 mr-2" />
-                            <p className="text-red-100 font-medium">
-                                Доступ ограничен
-                            </p>
-                        </div>
-                        <p className="mt-2 text-sm text-red-300/90">
-                            Требуются административные привилегии
-                        </p>
-                        {/* <button
-                            className="mt-3 px-4 py-2 bg-red-800/40 text-red-100 rounded-md hover:bg-red-700/60 transition-all duration-200 text-sm border border-red-700/50 hover:border-red-600" */}
-                        {/* // onClick={() => requestRights()} */}
-                        {/* > */}
-                            {/* <span className="flex items-center justify-center">
-                                <KeyIcon className="w-4 h-4 mr-2" />
-                                Запросить доступ
-                            </span> */}
-                        {/* </button> */}
-                    </div>
-                )}
-
-
-
-
-
-                <div className="mb-3">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Последнее обновление: {lastUpdate?.updatedAt ? new Date(lastUpdate.updatedAt).toLocaleString() : 'Нет данных'}
-                        <span className="ml-2 text-gray-500">(обновление раз в минуту)</span>
-                    </p>
+        <div className="fixed p-4 top-0 left-0 right-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-lg z-50 border-b border-white/10">
+            <div className="max-w-[1920px] mx-auto px-4">
+                <div className="flex justify-center space-x-4 scrollbar-hide h-10">
+                    {categories.map(category => (
+                        <Button
+                            key={category.id}
+                            text={category.title}
+                            variant={activeCategory === category.id ? "outline" : "secondary"}
+                            size="sm"
+                            className="min-w-[100px] h-10"
+                            onClick={() => handleCategoryClick(category.id, category.path)}
+                        />
+                    ))}
                 </div>
+            </div>
+        </div>
+    );
+};
 
-                {Object.keys(groupedUpdates).length > 0 && (
-                    <div className="space-y-3">
-                        {Object.entries(groupedUpdates).map(([name, group]) => (
-                            <Block key={name} className="p-1">
-                                <div
-                                    className="cursor-pointer"
-                                    onClick={() => toggleGroup(name)}
-                                >
-                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                                        <div className="flex-1">
-                                            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
-                                                {name}
-                                                <span className="ml-2 text-sm text-gray-500">
-                                                    ({group.items.length} {group.items.length === 1 ? 'элемент' : group.items.length < 5 ? 'элемента' : 'элементов'})
-                                                </span>
-                                            </h2>
+const GameSection: React.FC<{ title: string; games: Array<{ id: number; title: string; image: string }> }> = ({ title, games }) => {
+    const handleGameClick = (gameTitle: string) => {
+        console.log(`Starting game: ${gameTitle}`);
+        // Здесь будет логика запуска игры
+    };
 
-                                            <div className="space-y-2">
+    return (
+        <div className="w-full mb-8">
+            <CategoryTitle title={title} />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-3">
+                {games.map((game) => (
+                    <GameCard
+                        key={game.id}
+                        title={game.title}
+                        image={game.image}
+                        onClick={() => handleGameClick(game.title)}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+};
 
+const MainPage: React.FC = () => {
+    const { user } = useUserData();
 
-                                                {group.itemFilters && (
-                                                    <div className="space-y-1">
-                                                        {group.itemFilters.models?.length > 0 && (
-                                                            <div className="flex items-start gap-1">
-                                                                <p className="text-xs text-gray-500">Модели:</p>
-                                                                <p className="text-xs font-medium line-clamp-1">
-                                                                    {group.itemFilters.models.join(', ')}
-                                                                </p>
-                                                            </div>
-                                                        )}
+    const popularGames = [
+        { id: 1, title: "Classic Roulette", image: "/games/roulette.jpg" },
+        { id: 2, title: "Banana Splash", image: "/games/banana-splash.jpg" },
+        { id: 3, title: "Age of Gods", image: "/games/age-of-gods.jpg" },
+        { id: 4, title: "Hot 7", image: "/games/hot7.jpg" },
+        { id: 5, title: "Hot Fruits 100", image: "/games/hot-fruits.jpg" },
+        { id: 6, title: "Wild Shark", image: "/games/wild-shark.jpg" },
+        { id: 7, title: "Book of Ra", image: "/games/book-of-ra.jpg" },
+        { id: 8, title: "Lucky Lady's Charm", image: "/games/lucky-ladys-charm.jpg" },
+        { id: 9, title: "Sizzling Hot", image: "/games/sizzling-hot.jpg" },
+        { id: 10, title: "Dolphin's Pearl", image: "/games/dolphins-pearl.jpg" },
+        { id: 11, title: "Columbus", image: "/games/columbus.jpg" },
+        { id: 12, title: "Lord of the Ocean", image: "/games/lord-of-ocean.jpg" }
+    ];
 
-                                                        {group.itemFilters.backgrounds?.length > 0 && (
-                                                            <div className="flex items-start gap-1">
-                                                                <p className="text-xs text-gray-500">Фоны:</p>
-                                                                <p className="text-xs font-medium line-clamp-1">
-                                                                    {group.itemFilters.backgrounds.join(', ')}
-                                                                </p>
-                                                            </div>
-                                                        )}
+    const slots = [
+        { id: 1, title: "Bai Shi", image: "/games/bai-shi.jpg" },
+        { id: 2, title: "Funky Monkey", image: "/games/funky-monkey.jpg" },
+        { id: 3, title: "Attila", image: "/games/attila.jpg" },
+        { id: 4, title: "Cherry Love", image: "/games/cherry-love.jpg" },
+        { id: 5, title: "Admiral Nelson", image: "/games/admiral-nelson.jpg" },
+        { id: 6, title: "Banana Splash", image: "/games/banana-splash.jpg" },
+        { id: 7, title: "Golden Sevens", image: "/games/golden-sevens.jpg" },
+        { id: 8, title: "Pharaoh's Gold", image: "/games/pharaohs-gold.jpg" },
+        { id: 9, title: "Queen of Hearts", image: "/games/queen-of-hearts.jpg" },
+        { id: 10, title: "Royal Dynasty", image: "/games/royal-dynasty.jpg" },
+        { id: 11, title: "Magic Princess", image: "/games/magic-princess.jpg" },
+        { id: 12, title: "Gryphon's Gold", image: "/games/gryphons-gold.jpg" },
+        { id: 13, title: "Diamond 7", image: "/games/diamond-7.jpg" },
+        { id: 14, title: "Ultra Hot", image: "/games/ultra-hot.jpg" },
+        { id: 15, title: "Always Hot", image: "/games/always-hot.jpg" }
+    ];
 
-                                                        {group.itemFilters.symbols?.length > 0 && (
-                                                            <div className="flex items-start gap-1">
-                                                                <p className="text-xs text-gray-500">Символы:</p>
-                                                                <p className="text-xs font-medium line-clamp-1">
-                                                                    {group.itemFilters.symbols.join(', ')}
-                                                                </p>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
+    const jackpotGames = [
+        { id: 1, title: "Age of Privateers", image: "/games/age-of-privateers.jpg" },
+        { id: 2, title: "Alchemists Secret", image: "/games/alchemists-secret.jpg" },
+        { id: 3, title: "Amazing Fruits", image: "/games/amazing-fruits.jpg" },
+        { id: 4, title: "Mega Joker", image: "/games/mega-joker.jpg" },
+        { id: 5, title: "Super Fortune", image: "/games/super-fortune.jpg" },
+        { id: 6, title: "Diamond Strike", image: "/games/diamond-strike.jpg" },
+        { id: 7, title: "Golden Sevens Deluxe", image: "/games/golden-sevens-deluxe.jpg" },
+        { id: 8, title: "Mega Fortune", image: "/games/mega-fortune.jpg" }
+    ];
 
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                {group.isExpanded ? 'Скрыть' : 'Показать'}
-                                            </span>
-                                            <svg
-                                                className={`w-4 h-4 transition-transform ${group.isExpanded ? 'rotate-180' : ''}`}
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                            >
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {group.isExpanded && (
-                                    <div className="mt-3 space-y-3">
-                                        {group.items.map((update) => (
-                                            <div key={update.id} className="bg-gray-100 dark:bg-gray-800 rounded p-1">
-                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center gap-3">
-                                                            <span className={`text-lg font-bold ${getProfitColor(update.profit)}`}>
-                                                                {update.profit} TON
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <span className="text-sm text-gray-600 dark:text-gray-400">Цена продажи: </span>
-                                                        <span className="font-bold text-blue-600 dark:text-blue-400">
-                                                            {update.sellPrice} TON
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="mt-3">
-                                                    <div className="grid grid-cols-1 gap-2">
-                                                        {update.Gifts.map((gift, index) => (
-                                                            <div
-                                                                key={gift.id}
-                                                                className="bg-gray-50 dark:bg-gray-700 rounded p-1 flex justify-between items-center text-sm"
-                                                            >
-                                                                <div className="flex flex-col">
-                                                                    <span className="text-gray-700 dark:text-gray-300">
-                                                                        Товар {index + 1}
-                                                                    </span>
-
-                                                                    {displayGiftInfo(group.itemFilters, gift)}
-                                                                </div>
-                                                                <span className="font-medium text-gray-800 w-min dark:text-white end-0">
-                                                                    {formatPrice(gift.price * 1.1)} TON
-                                                                </span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </Block>
-                        ))}
+    return (
+        <PageContainer>
+            <Navigation />
+            <div className="w-full max-w-[1920px] mx-auto px-4 pt-16">
+                <div className="grid grid-cols-12 gap-6">
+                    {/* Сайдбар */}
+                    <div className="hidden lg:block lg:col-span-2">
+                        <div className="sticky top-20 bg-white dark:bg-gray-800 rounded-lg p-4 shadow-md">
+                            <h3 className="text-lg font-semibold mb-4">Категории</h3>
+                            <nav className="space-y-2">
+                                <a href="#popular" className="block px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">Популярные</a>
+                                <a href="#slots" className="block px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">Слоты</a>
+                                <a href="#jackpot" className="block px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">Джек Пот</a>
+                            </nav>
+                        </div>
                     </div>
-                )}
+
+                    {/* Основной контент */}
+                    <div className="col-span-12 lg:col-span-10">
+                        <div className="grid grid-cols-12 gap-4">
+                            <div className="col-span-12 space-y-12">
+                                <div id="popular" className="scroll-mt-16">
+                                    <GameSection title="Популярные" games={popularGames} />
+                                </div>
+                                <div id="slots" className="scroll-mt-16">
+                                    <GameSection title="Слоты" games={slots} />
+                                </div>
+                                <div id="jackpot" className="scroll-mt-16">
+                                    <GameSection title="Джек Пот" games={jackpotGames} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </PageContainer>
     );

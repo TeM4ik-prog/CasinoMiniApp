@@ -5,8 +5,8 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
 import { DatabaseService } from './database/database.service';
-import { GiftsModule } from './gifts/gifts.module';
 import { TelegramModule } from './telegram/telegram.module';
+
 
 @Module({
   imports: [
@@ -17,7 +17,6 @@ import { TelegramModule } from './telegram/telegram.module';
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
     }),
-    GiftsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -36,8 +35,6 @@ export class AppModule implements OnModuleInit {
   }
 
   async cleanDatabase() {
-    await this.databaseService.packGiftsDataUpdate.deleteMany()
-    await this.databaseService.giftModel.deleteMany()
 
 
 

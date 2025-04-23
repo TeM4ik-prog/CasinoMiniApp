@@ -2,7 +2,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
+datasource sqlite {
   provider = "sqlite"
   url      = "file:./dev.db"
 }
@@ -13,97 +13,6 @@ model User {
   username   String
   lastName   String?
   firstName  String?
-
-  authTonnelData String?
-
-  minProfit   Float         @default(0.5)
-  // UserFilters UserFilters[]
-}
-
-model Filters {
-  id     String @id @default(uuid())
-
-  nft         String
-  models      Json
-  backgrounds Json
-  symbols     Json
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Gift {
-  id       String @id @default(uuid())
-  giftId   Int
-  giftNum  Int
-  name     String
-  price    Float
-  model    String
-  symbol   String
-  backdrop String
-
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  GiftsDataUpdate   GiftsDataUpdate? @relation(fields: [giftsDataUpdateId], references: [id], onUpdate: Cascade)
-  giftsDataUpdateId String?
-}
-
-model GiftsDataUpdate {
-  id    String @id @default(uuid())
-  Gifts Gift[]
-
-  profit    Float
-  sellPrice Float
-
-  createdAt             DateTime             @default(now())
-  updatedAt             DateTime             @default(now())
-  PackGiftsDataUpdate   PackGiftsDataUpdate? @relation(fields: [packGiftsDataUpdateId], references: [id], onUpdate: Cascade)
-  packGiftsDataUpdateId String?
-}
-
-model PackGiftsDataUpdate {
-  id              String            @id @default(uuid())
-  GiftsDataUpdate GiftsDataUpdate[]
-  updatedAt       DateTime          @default(now())
-}
-
-model ActiveChat {
-  id             Int      @id @default(autoincrement())
-  chatId         Int
-  userTelegramId Int
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  @@unique([chatId, userTelegramId])
-}
-
-model GoodPriceMessage {
-  id        Int      @id @default(autoincrement())
-  chatId    Int
-  messageId Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([chatId, messageId])
-}
-
-model GiftModel {
-  id String @id @default(uuid())
-
-  name        String @unique
-  models      Json
-  backgrounds Json
-  symbols     Json
-}
-
-model GiftBackground {
-  id       String @id @default(uuid())
-  backdrop String
-
-  centerColor  Int
-  edgeColor    Int
-  patternColor Int
-  textColor    Int
-  name         String
-  permille     Int
+  photoUrl   String?
+  balance    Float?  @default(0)
 }

@@ -9,6 +9,7 @@ export interface ITelegramUser {
     username?: string;
     language_code?: string;
     is_premium?: boolean;
+    photo_url?: string;
 }
 
 export interface IUser {
@@ -17,10 +18,9 @@ export interface IUser {
     username: string;
     lastName: string | null;
     firstName: string;
-    hasRights: boolean
-    // authTonnelData: any | null;
-    minProfit: number;
-  }
+    photoUrl?: string;
+    balance: number;
+}
 
 export interface IGoogleAuth {
     clientId?: string;
