@@ -10,6 +10,7 @@ import { login, logout } from './store/user/user.slice';
 import { onRequest } from './types';
 import { ITelegramUser, IUser } from './types/auth';
 import { setTokenToLocalStorage } from './utils/localstorage';
+import { toast } from 'react-toastify';
 
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 const SlotsPage = lazy(() => import('@/pages/SlotsPage'));
@@ -46,41 +47,43 @@ function App() {
     try {
       // const savedUserData = getTokenFromLocalStorage()
 
-      const mockData = { "id": 2027571609, "first_name": "Artem", "last_name": "", "username": "TeM4ik20", "language_code": "ru", "c": true, "allows_write_to_pm": true, "photo_url": "https://t.me/i/userpic/320/kf7ulebcULGdGk8Fpe4W3PkcpX2DxWO1rIHZdwT60vM.svg" }
+      // const mockData = { "id": 2027571609, "first_name": "Artem", "last_name": "", "username": "TeM4ik20", "language_code": "ru", "c": true, "allows_write_to_pm": true, "photo_url": "https://t.me/i/userpic/320/kf7ulebcULGdGk8Fpe4W3PkcpX2DxWO1rIHZdwT60vM.svg" }
 
-      const data: { token: string, user: IUser } = await onRequest(AuthService.login(mockData))
-      console.log(data.user)
+      // const data: { token: string, user: IUser } = await onRequest(AuthService.login(mockData))
+      // console.log(data.user)
 
-      setTokenToLocalStorage(data.token)
+      // setTokenToLocalStorage(data.token)
 
-      // setUserData(data)
+      // // setUserData(data)
 
-      if (data) {
-        dispatch(login(data.user))
-      } else {
-        dispatch(logout())
+      // if (data) {
+      //   dispatch(login(data.user))
+      // } else {
+      //   dispatch(logout())
+      // }
+
+
+      if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+        const newUserData = window.Telegram.WebApp.initDataUnsafe.user
+
+        const data: { token: string, user: IUser } = await onRequest(AuthService.login(newUserData))
+        console.log(data)
+
+        setTokenToLocalStorage(data.token)
+
+        window.Telegram.WebApp.expand()
+
+        // setUserData(data)
+
+        if (data) {
+          dispatch(login(data.user))
+        } else {
+          dispatch(logout())
+        }
       }
-
-
-      // if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
-      //   const newUserData = window.Telegram.WebApp.initDataUnsafe.user
-
-      //   const data: { token: string, user: IUser } = await onRequest(AuthService.login(newUserData))
-      //   console.log(data)
-
-      //   setTokenToLocalStorage(data.token)
-
-      //   // setUserData(data)
-
-      //   if (data) {
-      //     dispatch(login(data.user))
-      //   } else {
-      //     dispatch(logout())
-      //   }
-      // }
-      // else {
-      //   toast.warning('no telegram data')
-      // }
+      else {
+        toast.warning('no telegram data')
+      }
 
 
 
